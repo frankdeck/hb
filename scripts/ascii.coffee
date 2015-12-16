@@ -24,19 +24,19 @@ module.exports = (robot) ->
     query = res.match[1] + ".jpg&tbs=isz:s,ic:gray,itp:clipart"
     getUrlList query, (err, imageURLs) ->
       if err
-        res.send err
+        res.send "Sorry, #{err}"
       else
         getQualityURL imageURLs, (err, url) ->
           if err
-            res.send err
+            res.send "Sorry, #{err}"
           else
             writeToFile url, (err, filename) ->
               if err
-                res.send err
+                res.send "Sorry, #{err}"
               else
                 convertFile filename, null, (err, text) ->
                   if err
-                    res.send err
+                    res.send "Sorry, #{err}"
                   else
                     res.send "```\n#{text}```"
 
@@ -44,28 +44,34 @@ module.exports = (robot) ->
     gis query, (err, imageURLs) ->
       if err
         console.log err
-        callback "there was a problem searching for images", imageURLs
+        callback "there was a problem searching for images"
       else
         callback null, imageURLs
 
   getQualityURL = (imageURLs, callback) ->
-    position = Math.floor(Math.random() * imageURLs.length)
-    if /jpg$/i.test(imageURLs[position])
-      request.get(imageURLs[position]).on 'response', (response) ->
-        if response.statusCode == 200
-          callback null, imageURLs[position]
-        else
-          imageURLs.splice position, 1
-          getQualityURL imageURLs, callback
-    else
-      imageURLs.splice position, 1
-      getQualityURL imageURLs, callback
+    try
+      position = Math.floor(Math.random() * imageURLs.length)
+      if /jpg$/i.test(imageURLs[position])
+        request.get(imageURLs[position]).on 'response', (response) ->
+          if response.statusCode == 200
+            callback null, imageURLs[position]
+          else
+            imageURLs.splice position, 1
+            getQualityURL imageURLs, callback
+      else
+        imageURLs.splice position, 1
+        getQualityURL imageURLs, callback
+    catch
+      callback "there was a problem getting a quality URL"
             
   writeToFile = (url, callback) ->
-    filename = '/tmp/image.jpg'
-    file = fs.createWriteStream filename
-    request(url).pipe(file).on 'close', () ->
-      callback null, filename
+    try
+      filename = '/tmp/image.jpg'
+      file = fs.createWriteStream filename
+      request(url).pipe(file).on 'close', () ->
+        callback null, filename
+    catch
+      callback "there was a problem writing the image to file"
 
   convertFile = (filename, width, callback) ->
     graftyWidth = width || process.env.ASCII_CHARACTER_WIDTH
