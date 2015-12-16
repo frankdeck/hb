@@ -26,10 +26,19 @@ module.exports = (robot) ->
       if err
         res.send err
       else
-        getQualityURL imageURLs, (url) ->
-          writeToFile url, (filename) ->
-            convertFile filename, (text) ->
-              res.send "\n```\n#{text}\n```"
+        getQualityURL imageURLs, (err, url) ->
+          if err
+            res.send err
+          else
+            writeToFile url, (err, filename) ->
+              if err
+                res.send err
+              else
+                convertFile filename, (err, text) ->
+                  if err
+                    res.send err
+                  else
+                    res.send "\n```\n#{text}\n```"
 
   getUrlList = (query, callback) ->
     gis query, (err, imageURLs) ->
@@ -44,7 +53,7 @@ module.exports = (robot) ->
     if /jpg$/i.test(imageURLs[position])
       request.get(imageURLs[position]).on 'response', (response) ->
         if response.statusCode == 200
-          callback imageURLs[position]
+          callback null, imageURLs[position]
         else
           imageURLs.splice position, 1
           getQualityURL imageURLs, callback
@@ -56,10 +65,17 @@ module.exports = (robot) ->
     filename = '/tmp/image.jpg'
     file = fs.createWriteStream filename
     request(url).pipe(file).on 'close', () ->
-      callback filename
+      callback null, filename
 
   convertFile = (filename, callback) ->
-    grafty = new Grafty width: 100
-    grafty.convert filename, (err, text) ->
-      console.error err if err 
-      callback text
+    graftyWidth = process.env.ASCII_CHARACTER_WIDTH
+    if !graftyWidth
+      callback "the ASCII_CHARACTER_WIDTH has not been set"
+    else
+      grafty = new Grafty width: graftyWidth
+      grafty.convert filename, (err, text) ->
+        if err
+          console.error err if err
+          callback "there was a problem converting the image to ascii"
+        else
+          callback null, text
