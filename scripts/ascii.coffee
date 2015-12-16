@@ -43,7 +43,7 @@ module.exports = (robot) ->
   getUrlList = (query, callback) ->
     gis query, (err, imageURLs) ->
       if err
-        console.error err
+        console.log err
         callback "there was a problem searching for images", imageURLs
       else
         callback null, imageURLs
@@ -75,7 +75,7 @@ module.exports = (robot) ->
       grafty = new Grafty width: graftyWidth
       grafty.convert filename, (err, text) ->
         if err
-          console.error err if err
+          console.log err
           callback "there was a problem converting the image to ascii"
         else
           lines =  text.split(/\n/).length
