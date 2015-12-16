@@ -34,11 +34,11 @@ module.exports = (robot) ->
               if err
                 res.send err
               else
-                convertFile filename, (err, text) ->
+                convertFile filename, null, (err, text) ->
                   if err
                     res.send err
                   else
-                    res.send "\n```\n#{text}\n```"
+                    res.send "```\n#{text}```"
 
   getUrlList = (query, callback) ->
     gis query, (err, imageURLs) ->
@@ -67,8 +67,8 @@ module.exports = (robot) ->
     request(url).pipe(file).on 'close', () ->
       callback null, filename
 
-  convertFile = (filename, callback) ->
-    graftyWidth = process.env.ASCII_CHARACTER_WIDTH
+  convertFile = (filename, width, callback) ->
+    graftyWidth = width || process.env.ASCII_CHARACTER_WIDTH
     if !graftyWidth
       callback "the ASCII_CHARACTER_WIDTH has not been set"
     else
@@ -78,4 +78,10 @@ module.exports = (robot) ->
           console.error err if err
           callback "there was a problem converting the image to ascii"
         else
-          callback null, text
+          lines =  text.split(/\n/).length
+          # 50 maximum lines for code blocks in slack and the triple backticks use two of them
+          if lines >= 48
+            newWidth = graftyWidth - 10
+            convertFile filename, newWidth, callback
+          else
+            callback null, text
