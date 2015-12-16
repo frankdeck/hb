@@ -6,7 +6,7 @@
   "description": "A simple helpful robot made for good, not evil",
   "dependencies": {
     "g-i-s": "^1.0.1",
-    "grafty": "^0.0.5",
+    "grafty": "frankdeck/node-grafty",
     "hubot": "^2.17.0",
     "hubot-diagnostics": "0.0.1",
     "hubot-google-images": "^0.2.4",
