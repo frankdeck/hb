@@ -79,8 +79,8 @@ module.exports = (robot) ->
           callback "there was a problem converting the image to ascii"
         else
           lines =  text.split(/\n/).length
-          # 50 maximum lines for code blocks in slack and the triple backticks use two of them
-          if lines >= 48
+          # slack limits to 50 lines (for code blocks) and 4000 characters in slack (the triple backticks use two of the lines)
+          if lines >= 48 || text.length >= 4000
             newWidth = graftyWidth - 10
             convertFile filename, newWidth, callback
           else
