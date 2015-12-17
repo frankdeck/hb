@@ -28,11 +28,11 @@ module.exports = (robot) ->
       if err
         res.send "Sorry, #{err}"
       else
-        getQualityURL imageURLs, (err, url) ->
+        getQualityURL imageURLs, (err, imageURL) ->
           if err
             res.send "Sorry, #{err}"
           else
-            writeToFile url, (err, filename) ->
+            writeToFile imageURL, (err, filename) ->
               if err
                 res.send "Sorry, #{err}"
               else
@@ -40,7 +40,7 @@ module.exports = (robot) ->
                   if err
                     res.send "Sorry, #{err}"
                   else
-                    postResponse channel, query, text, (err) ->
+                    postResponse channel, query, text, imageURL, (err) ->
                       res.send "Sorry, #{err}" if err
 
   getUrlList = (query, callback) ->
@@ -96,13 +96,14 @@ module.exports = (robot) ->
           else
             callback null, text
 
-  postResponse = (channel, query, text, callback) ->
+  postResponse = (channel, query, text, imageURL, callback) ->
     url   = 'https://slack.com/api/files.upload'
     params =
       channels: channel
       content:  text
       filename: "#{query} - ascii.txt"
       filetype: 'txt'
+      initial_comment: imageURL
       token:    process.env.HUBOT_SLACK_TOKEN
 
     request.post url, form:params, (err, repsonse, body) ->
