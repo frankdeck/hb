@@ -22,6 +22,8 @@ module.exports = (robot) ->
 
   robot.respond /ascii me (.*)/i, (res) ->
     query = res.match[1]
+    channel = res.message.rawMessage.channel
+    res.send "Working on it..."
     getUrlList query, (err, imageURLs) ->
       if err
         res.send "Sorry, #{err}"
@@ -38,14 +40,15 @@ module.exports = (robot) ->
                   if err
                     res.send "Sorry, #{err}"
                   else
-                    res.send "```\n#{text}```"
+                    postResponse channel, query, text, (err) ->
+                      res.send "Sorry, #{err}" if err
 
   getUrlList = (query, callback) ->
     query += ".jpg&tbs=isz:s,ic:gray,itp:clipart"
     gis query, (err, imageURLs) ->
       if err
         console.log err
-        callback "there was a problem searching for images"
+        callback "there was a problem searching for images: #{err}"
       else
         callback null, imageURLs
 
@@ -62,8 +65,8 @@ module.exports = (robot) ->
       else
         imageURLs.splice position, 1
         getQualityURL imageURLs, callback
-    catch
-      callback "there was a problem getting a quality URL"
+    catch err
+      callback "there was a problem getting a quality URL: #{err}"
 
   writeToFile = (url, callback) ->
     try
@@ -71,8 +74,8 @@ module.exports = (robot) ->
       file = fs.createWriteStream filename
       request(url).pipe(file).on 'close', () ->
         callback null, filename
-    catch
-      callback "there was a problem writing the image to file"
+    catch err
+      callback "there was a problem writing the image to file: #{err}"
 
   convertFile = (filename, width, callback) ->
     graftyWidth = width || process.env.ASCII_CHARACTER_WIDTH
@@ -83,7 +86,7 @@ module.exports = (robot) ->
       grafty.convert filename, (err, text) ->
         if err
           console.log err
-          callback "there was a problem converting the image to ascii"
+          callback "there was a problem converting the image to ascii: #{err}"
         else
           lines =  text.split(/\n/).length
           # slack limits to 50 lines (for code blocks) and 4000 characters in slack (the triple backticks use two of the lines)
@@ -92,3 +95,18 @@ module.exports = (robot) ->
             convertFile filename, newWidth, callback
           else
             callback null, text
+
+  postResponse = (channel, query, text, callback) ->
+    url   = 'https://slack.com/api/files.upload'
+    params =
+      channels: channel
+      content:  text
+      filename: "#{query} - ascii.txt"
+      filetype: 'txt'
+      token:    process.env.HUBOT_SLACK_TOKEN
+
+    request.post url, form:params, (err, repsonse, body) ->
+      if err || JSON.parse(body).ok != true
+        err = JSON.parse(body).error if !err
+        console.error err
+        callback "there was a problem uploading the file to slack: #{err}"
