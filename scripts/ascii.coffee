@@ -21,7 +21,7 @@ request = require "request"
 module.exports = (robot) ->
 
   robot.respond /ascii me (.*)/i, (res) ->
-    query = res.match[1] + ".jpg&tbs=isz:s,ic:gray,itp:clipart"
+    query = res.match[1]
     getUrlList query, (err, imageURLs) ->
       if err
         res.send "Sorry, #{err}"
@@ -41,6 +41,7 @@ module.exports = (robot) ->
                     res.send "```\n#{text}```"
 
   getUrlList = (query, callback) ->
+    query += ".jpg&tbs=isz:s,ic:gray,itp:clipart"
     gis query, (err, imageURLs) ->
       if err
         console.log err
