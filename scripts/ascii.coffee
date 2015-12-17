@@ -19,7 +19,7 @@ Grafty  = require "grafty"
 request = require "request"
 
 module.exports = (robot) ->
-    
+
   robot.respond /ascii me (.*)/i, (res) ->
     query = res.match[1] + ".jpg&tbs=isz:s,ic:gray,itp:clipart"
     getUrlList query, (err, imageURLs) ->
@@ -63,7 +63,7 @@ module.exports = (robot) ->
         getQualityURL imageURLs, callback
     catch
       callback "there was a problem getting a quality URL"
-            
+
   writeToFile = (url, callback) ->
     try
       filename = '/tmp/image.jpg'
