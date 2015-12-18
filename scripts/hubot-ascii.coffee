@@ -23,7 +23,6 @@ module.exports = (robot) ->
 
   robot.respond /ascii me (.*)/i, (res) ->
     query = res.match[1]
-    channel = res.message.rawMessage.channel
     res.send "Working on it..."
     getUrlList query, (err, imageURLs) ->
       if err
@@ -42,6 +41,7 @@ module.exports = (robot) ->
                     res.send "Sorry, #{err}"
                   else
                     if robot.adapterName == 'slack'
+                      channel = res.message.rawMessage.channel
                       uploadSlackTextFile channel, query, text, imageURL, (err) ->
                         res.send "Sorry, #{err}" if err
                     else
