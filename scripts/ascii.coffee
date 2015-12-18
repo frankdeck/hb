@@ -19,6 +19,7 @@ Grafty  = require "grafty"
 request = require "request"
 
 module.exports = (robot) ->
+  console.log robot.adapterName
 
   robot.respond /ascii me (.*)/i, (res) ->
     query = res.match[1]
@@ -40,8 +41,11 @@ module.exports = (robot) ->
                   if err
                     res.send "Sorry, #{err}"
                   else
-                    postResponse channel, query, text, imageURL, (err) ->
-                      res.send "Sorry, #{err}" if err
+                    if robot.adapterName == 'slack'
+                      uploadSlackTextFile channel, query, text, imageURL, (err) ->
+                        res.send "Sorry, #{err}" if err
+                    else
+                      res.send "#{text}"
 
   getUrlList = (query, callback) ->
     query += ".jpg&tbs=isz:s,ic:gray,itp:clipart"
@@ -96,13 +100,13 @@ module.exports = (robot) ->
           else
             callback null, text
 
-  postResponse = (channel, query, text, imageURL, callback) ->
+  uploadSlackTextFile = (channel, query, text, imageURL, callback) ->
     url   = 'https://slack.com/api/files.upload'
     params =
       channels: channel
       content:  text
       filename: "#{query} - ascii.txt"
-      filetype: 'txt'
+      filetype: 'text'
       initial_comment: imageURL
       token:    process.env.HUBOT_SLACK_TOKEN
 
