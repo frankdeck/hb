@@ -86,7 +86,8 @@ module.exports = (robot) ->
     if !graftyWidth
       callback "the ASCII_CHARACTER_WIDTH has not been set"
     else
-      grafty = new Grafty width: graftyWidth
+      flags = ['-negate', '-brightness-contrast', '50x50']
+      grafty = new Grafty width: graftyWidth, flags
       grafty.convert filename, (err, text) ->
         if err
           console.log err
