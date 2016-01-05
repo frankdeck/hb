@@ -1,7 +1,6 @@
 # Takes an Android Netrunner card name and returns the card image
 # References netrunnerdb.com
 # [[<cardname>]] - returns card image if it exists
-# 
 
 module.exports = (robot) ->
   robot.hear /\[\[(.*)\]\]/i, (res) ->
